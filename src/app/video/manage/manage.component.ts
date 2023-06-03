@@ -1,5 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ClipService } from 'src/app/services/clip.service';
+import Clip from '../../models/clip.model';
+import { ModalService } from 'src/app/services/modal.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
 	selector: 'app-manage',
@@ -8,13 +12,41 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 })
 export class ManageComponent implements OnInit {
 	videoOrder = '1';
-  selected = '';
+	selected = '';
+	clips: Clip[] = [];
+	activeClip: Clip | null = null;
+	sort$: BehaviorSubject<string>;
 
-	constructor(private router: Router, private route: ActivatedRoute) {}
+	constructor(
+		private router: Router,
+		private route: ActivatedRoute,
+		private clipService: ClipService,
+		private modal: ModalService
+	) {
+		this.sort$ = new BehaviorSubject(this.videoOrder);
+	}
 
 	ngOnInit(): void {
 		this.route.queryParams.subscribe((params: Params) => {
 			this.videoOrder = params.sort === '2' ? params.sort : '1';
+			this.sort$.next(this.videoOrder);
+		});
+		this.clipService.getUserClips(this.sort$).subscribe(docs => {
+			this.clips = [];
+
+			docs.forEach(doc => {
+				this.clips.push({
+					docID: doc.id,
+					uid: doc.data().uid,
+					displayName: doc.data().displayName,
+					title: doc.data().title,
+					fileName: doc.data().fileName,
+					url: doc.data().url,
+					timestamp: doc.data().timestamp,
+					screenshotURL: doc.data().screenshotURL,
+					screenshotFileName: doc.data().screenshotFileName,
+				});
+			});
 		});
 	}
 
@@ -26,5 +58,44 @@ export class ManageComponent implements OnInit {
 				sort: value,
 			},
 		});
+	}
+
+	openModal(event: Event, clip: Clip) {
+		event.preventDefault();
+
+		this.activeClip = clip;
+		this.modal.toggleModal('editClip');
+	}
+
+	update(event: Clip) {
+		this.clips.forEach((element, index) => {
+			if (element.docID === event.docID) {
+				this.clips[index].title = event.title;
+			}
+		});
+	}
+
+	deleteClip(event: Event, clip: Clip) {
+		event.preventDefault();
+
+		this.clipService.deleteClip(clip);
+		this.clips.forEach((element, i) => {
+			if (element.docID === clip.docID) {
+				this.clips.splice(i, 1);
+			}
+		});
+	}
+
+	async copyToClipboard(event: MouseEvent, docID: string | undefined) {
+		event.preventDefault();
+
+		if (!docID) {
+			return;
+		}
+
+		const url = `${location.origin}/clip/${docID}`;
+
+		await navigator.clipboard.writeText(url);
+		alert('Link Copied!');
 	}
 }

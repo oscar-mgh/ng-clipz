@@ -22,7 +22,7 @@ export class AuthService {
 	) {
 		this.usersCollection = db.collection('users');
 		this.isAuthenticated$ = auth.user.pipe(map(user => !!user));
-		this.isAuthenticatedWithDelay$ = this.isAuthenticated$.pipe(delay(900));
+		this.isAuthenticatedWithDelay$ = this.isAuthenticated$.pipe(delay(1000));
 		this.router.events
 			.pipe(
 				filter(e => e instanceof NavigationEnd),
@@ -60,9 +60,9 @@ export class AuthService {
 		});
 	}
 
-	public async logout($event?: Event) {
-		if ($event) {
-			$event.preventDefault();
+	public async logout(event?: Event) {
+		if (event) {
+			event.preventDefault();
 		}
 		await this.auth.signOut();
 
