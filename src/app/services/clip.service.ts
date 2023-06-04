@@ -7,7 +7,7 @@ import {
 } from '@angular/fire/compat/firestore';
 import Clip from '../models/clip.model';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { BehaviorSubject, combineLatest, map, of, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, map, of, switchMap } from 'rxjs';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
 
@@ -102,19 +102,19 @@ export class ClipService implements Resolve<Clip | null> {
 		this.pendingRequest = false;
 	}
 
-	resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+	resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<Clip | null> {
 		return this.clipsCollection
 			.doc(route.params.id)
 			.get()
 			.pipe(
 				map(snapshot => {
 					const data = snapshot.data();
-
 					if (!data) {
-						this.router.navigate(['/'])
+						this.router.navigate(['/']);
+						return null;
 					}
 
-					return data ?? null;
+					return data;
 				})
 			);
 	}

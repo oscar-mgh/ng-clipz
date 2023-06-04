@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import Clip from '../models/clip.model';
 import { DatePipe } from '@angular/common';
 
@@ -12,7 +12,7 @@ import { DatePipe } from '@angular/common';
 export class ClipComponent implements OnInit {
 	clip?: Clip;
 
-	constructor(public route: ActivatedRoute) {}
+	constructor(public route: ActivatedRoute, public router: Router) {}
 
 	ngOnInit(): void {
 		this.route.data.subscribe(data => {
